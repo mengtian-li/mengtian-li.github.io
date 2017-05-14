@@ -1,0 +1,24 @@
+---
+layout: post
+title:  "iOS小技巧汇总"
+date:   2017-05-14 22:03:59 +0800
+categories: jekyll update
+---
+
+### 1.在block执行期间，weak引用强持有
+
+```
+__weak typedef(someClass) weakClass = someClass;
+[xxx setHandler:^{
+    typedef(someClass) strongClass = weakClass;
+    [strongClass doSomething];
+}];
+ 
+```
+为了避免强引用环，在使用闭包时，一些引入的对象，都使用不增加引用计数的weak指针持有，但当使用的时候，为了避免对象被提前释放，可以用strong指针持有，可以确保在使用该对象的时候，不会被释放。
+注：
+1. 使用不带修饰的指针变量，默认是带有`__strong`修饰
+
+
+
+

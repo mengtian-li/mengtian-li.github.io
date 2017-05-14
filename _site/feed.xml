@@ -1,5 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2017-05-14T20:26:07+08:00</updated><id>http://localhost:4000/</id><title type="html">LiMengtian’s Blog</title><subtitle>iOS开发学习中，记录自己学习点滴
-</subtitle><entry><title type="html">Mehtod Swizzling!</title><link href="http://localhost:4000/jekyll/update/2017/05/14/method-swizzling.html" rel="alternate" type="text/html" title="Mehtod Swizzling!" /><published>2017-05-14T15:43:59+08:00</published><updated>2017-05-14T15:43:59+08:00</updated><id>http://localhost:4000/jekyll/update/2017/05/14/method-swizzling</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2017/05/14/method-swizzling.html">&lt;p&gt;最近看&lt;code class=&quot;highlighter-rouge&quot;&gt;AFNetworking 3.1&lt;/code&gt;源代码的时候，看到里面用到了&lt;code class=&quot;highlighter-rouge&quot;&gt;Method Swizzling&lt;/code&gt;相关的技术，于是从网上查阅相关资料，做一个学习的记录。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2017-05-14T22:27:23+08:00</updated><id>http://localhost:4000/</id><title type="html">LiMengtian’s Blog</title><subtitle>iOS开发学习中，记录自己学习点滴
+</subtitle><entry><title type="html">iOS小技巧汇总</title><link href="http://localhost:4000/jekyll/update/2017/05/14/ios-skill.html" rel="alternate" type="text/html" title="iOS小技巧汇总" /><published>2017-05-14T22:03:59+08:00</published><updated>2017-05-14T22:03:59+08:00</updated><id>http://localhost:4000/jekyll/update/2017/05/14/ios-skill</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2017/05/14/ios-skill.html">&lt;h3 id=&quot;1在block执行期间weak引用强持有&quot;&gt;1.在block执行期间，weak引用强持有&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;__weak typedef(someClass) weakClass = someClass;
+[xxx setHandler:^{
+    typedef(someClass) strongClass = weakClass;
+    [strongClass doSomething];
+}];
+ 
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;为了避免强引用环，在使用闭包时，一些引入的对象，都使用不增加引用计数的weak指针持有，但当使用的时候，为了避免对象被提前释放，可以用strong指针持有，可以确保在使用该对象的时候，不会被释放。
+注：&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;使用不带修饰的指针变量，默认是带有&lt;code class=&quot;highlighter-rouge&quot;&gt;__strong&lt;/code&gt;修饰&lt;/li&gt;
+&lt;/ol&gt;</content><author><name></name></author><summary type="html">1.在block执行期间，weak引用强持有</summary></entry><entry><title type="html">Mehtod Swizzling!</title><link href="http://localhost:4000/jekyll/update/2017/05/14/method-swizzling.html" rel="alternate" type="text/html" title="Mehtod Swizzling!" /><published>2017-05-14T15:43:59+08:00</published><updated>2017-05-14T15:43:59+08:00</updated><id>http://localhost:4000/jekyll/update/2017/05/14/method-swizzling</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2017/05/14/method-swizzling.html">&lt;p&gt;最近看&lt;code class=&quot;highlighter-rouge&quot;&gt;AFNetworking 3.1&lt;/code&gt;源代码的时候，看到里面用到了&lt;code class=&quot;highlighter-rouge&quot;&gt;Method Swizzling&lt;/code&gt;相关的技术，于是从网上查阅相关资料，做一个学习的记录。&lt;/p&gt;
 
 &lt;p&gt;先看&lt;code class=&quot;highlighter-rouge&quot;&gt;AFNetworking&lt;/code&gt;里相关的代码实现，删除了源代码里的一些注释，加入了一些自己的注释，这里主要关注点在Method Swizzling相关技术。&lt;/p&gt;
 

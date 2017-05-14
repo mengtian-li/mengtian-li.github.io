@@ -6,11 +6,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>LiMengtian&#39;s Blog</title>
-  <meta name="description" content="iOS开发学习中，记录自己学习点滴">
+  <title>iOS小技巧汇总</title>
+  <meta name="description" content="1.在block执行期间，weak引用强持有">
 
   <link rel="stylesheet" href="/assets/main.css">
-  <link rel="canonical" href="http://localhost:4000/">
+  <link rel="canonical" href="http://localhost:4000/jekyll/update/2017/05/14/ios-skill.html">
   <link rel="alternate" type="application/rss+xml" title="LiMengtian&#39;s Blog" href="/feed.xml">
   
   
@@ -56,44 +56,35 @@
 
     <main class="page-content" aria-label="Content">
       <div class="wrapper">
-        <div class="home">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
 
-  <h1 class="page-heading">Posts</h1>
-  
-  
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">iOS小技巧汇总</h1>
+    <p class="post-meta"><time datetime="2017-05-14T22:03:59+08:00" itemprop="datePublished">May 14, 2017</time></p>
+  </header>
 
+  <div class="post-content" itemprop="articleBody">
+    <h3 id="1在block执行期间weak引用强持有">1.在block执行期间，weak引用强持有</h3>
 
-  <ul class="post-list">
-    
-      <li>
-        <span class="post-meta">May 14, 2017</span>
-
-        <h2>
-          <a class="post-link" href="/jekyll/update/2017/05/14/ios-skill.html">iOS小技巧汇总</a>
-        </h2>
-      </li>
-    
-      <li>
-        <span class="post-meta">May 14, 2017</span>
-
-        <h2>
-          <a class="post-link" href="/jekyll/update/2017/05/14/method-swizzling.html">Mehtod Swizzling!</a>
-        </h2>
-      </li>
-    
-      <li>
-        <span class="post-meta">Apr 4, 2017</span>
-
-        <h2>
-          <a class="post-link" href="/jekyll/update/2017/04/04/welcome-to-jekyll.html">Welcome to Jekyll!</a>
-        </h2>
-      </li>
-    
-  </ul>
-
-  <p class="rss-subscribe">subscribe <a href="/feed.xml">via RSS</a></p>
-
+<div class="highlighter-rouge"><pre class="highlight"><code>__weak typedef(someClass) weakClass = someClass;
+[xxx setHandler:^{
+    typedef(someClass) strongClass = weakClass;
+    [strongClass doSomething];
+}];
+ 
+</code></pre>
 </div>
+<p>为了避免强引用环，在使用闭包时，一些引入的对象，都使用不增加引用计数的weak指针持有，但当使用的时候，为了避免对象被提前释放，可以用strong指针持有，可以确保在使用该对象的时候，不会被释放。
+注：</p>
+<ol>
+  <li>使用不带修饰的指针变量，默认是带有<code class="highlighter-rouge">__strong</code>修饰</li>
+</ol>
+
+
+  </div>
+
+  
+</article>
 
       </div>
     </main>
