@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Mehtod Swizzling!</title>
+  <meta name="description" content="最近看AFNetworking 3.1源代码的时候，看到里面用到了Method Swizzling相关的技术，于是从网上查阅相关资料，做一个学习的记录。">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/jekyll/update/2017/05/14/method-swizzling.html">
+  <link rel="alternate" type="application/rss+xml" title="LiMengtian&#39;s Blog" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">LiMengtian&#39;s Blog</a>
+
+    <nav class="site-nav">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Mehtod Swizzling!</h1>
+    <p class="post-meta"><time datetime="2017-05-14T15:43:59+08:00" itemprop="datePublished">May 14, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>最近看<code class="highlighter-rouge">AFNetworking 3.1</code>源代码的时候，看到里面用到了<code class="highlighter-rouge">Method Swizzling</code>相关的技术，于是从网上查阅相关资料，做一个学习的记录。</p>
+
+<p>先看<code class="highlighter-rouge">AFNetworking</code>里相关的代码实现，删除了源代码里的一些注释，加入了一些自己的注释，这里主要关注点在Method Swizzling相关技术。</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="k">static</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">af_swizzleSelector</span><span class="p">(</span><span class="n">Class</span> <span class="n">theClass</span><span class="p">,</span> <span class="n">SEL</span> <span class="n">originalSelector</span><span class="p">,</span> <span class="n">SEL</span> <span class="n">swizzledSelector</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//获取`theClass`的`originalSelector`对应方法的Method
+</span>    <span class="n">Method</span> <span class="n">originalMethod</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">theClass</span><span class="p">,</span> <span class="n">originalSelector</span><span class="p">);</span>
+    <span class="c1">//获取`theClass`的`swizzledSelector`对应方法的Method
+</span>    <span class="n">Method</span> <span class="n">swizzledMethod</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">theClass</span><span class="p">,</span> <span class="n">swizzledSelector</span><span class="p">);</span>
+    <span class="c1">//交换两个Method的实现
+</span>    <span class="n">method_exchangeImplementations</span><span class="p">(</span><span class="n">originalMethod</span><span class="p">,</span> <span class="n">swizzledMethod</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>查看文档，大概意思说<code class="highlighter-rouge">class_getInstanceMethod</code>这个方法，获取<code class="highlighter-rouge">aClass</code>中<code class="highlighter-rouge">aSelector</code>对应实例方法的实现，并且这个方法，若当前类不存在这个对应的实例方法，会一直向上搜寻父类中<code class="highlighter-rouge">aSelector</code>对应实例方法，直到返回NULL</p>
+
+<h3 id="class_getinstancemethod">class_getInstanceMethod</h3>
+<blockquote>
+  <p><code class="highlighter-rouge">Method class_getInstanceMethod(Class aClass, SEL aSelector);</code></p>
+  <blockquote>
+    <p>The method that corresponds to the implementation of the selector specified by aSelector for the class specified by aClass, or NULL if the specified class or its superclasses do not contain an instance method with the specified selector.
+Note that this function searches superclasses for implementations</p>
+  </blockquote>
+</blockquote>
+
+<p>查看文档，大概意思说<code class="highlighter-rouge">class_getInstanceMethod</code>这个方法，获取<code class="highlighter-rouge">aClass</code>中<code class="highlighter-rouge">aSelector</code>对应实例方法的实现，并且这个方法，若当前类不存在这个对应的实例方法，会一直向上搜寻父类中<code class="highlighter-rouge">aSelector</code>对应实例方法，直到返回NULL</p>
+
+<h3 id="method_exchangeimplementations">method_exchangeImplementations</h3>
+<blockquote>
+  <p><code class="highlighter-rouge">void method_exchangeImplementations(Method m1, Method m2);</code></p>
+  <blockquote>
+    <p>Exchanges the implementations of two methods.</p>
+  </blockquote>
+</blockquote>
+
+<p>交换两个Mehtod的实现</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>static inline BOOL af_addMethod(Class theClass, SEL selector, Method method) {
+    return class_addMethod(theClass, selector,  method_getImplementation(method),  method_getTypeEncoding(method));
+}
+
+</code></pre>
+</div>
+
+<h3 id="class_addmethod">class_addMethod</h3>
+<blockquote>
+  <p><code class="highlighter-rouge">BOOL class_addMethod(Class cls, SEL name, IMP imp, const char *types);</code></p>
+  <blockquote>
+    <p>Adds a new method to a class with a given name and implementation.</p>
+  </blockquote>
+</blockquote>
+
+<h3 id="method_getimplementation">method_getImplementation</h3>
+<blockquote>
+  <p><code class="highlighter-rouge">IMP method_getImplementation(Method m);</code></p>
+  <blockquote>
+    <p>Returns the implementation of a method.</p>
+  </blockquote>
+</blockquote>
+
+<h3 id="method_gettypeencoding">method_getTypeEncoding</h3>
+<blockquote>
+  <p><code class="highlighter-rouge">const char * method_getTypeEncoding(Method m);</code></p>
+  <blockquote>
+    <p>Returns a string describing a method’s parameter and return types.</p>
+  </blockquote>
+</blockquote>
+
+<p>再来看<code class="highlighter-rouge">AFNetworking</code>用到上述两个方法的地方</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="o">+</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">swizzleResumeAndSuspendMethodForClass</span><span class="o">:</span><span class="p">(</span><span class="n">Class</span><span class="p">)</span><span class="n">theClass</span> <span class="p">{</span>
+    <span class="c1">//获取af_resume af_suspend 方法
+</span>    <span class="n">Method</span> <span class="n">afResumeMethod</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">af_resume</span><span class="p">));</span>
+    <span class="n">Method</span> <span class="n">afSuspendMethod</span> <span class="o">=</span> <span class="n">class_getInstanceMethod</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">af_suspend</span><span class="p">));</span>
+
+    <span class="c1">//1.先将af_resume 加入到theClass里，再交换theClass resume 和 af_resumef方法的实现
+</span>    <span class="k">if</span> <span class="p">(</span><span class="n">af_addMethod</span><span class="p">(</span><span class="n">theClass</span><span class="p">,</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">af_resume</span><span class="p">),</span> <span class="n">afResumeMethod</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">af_swizzleSelector</span><span class="p">(</span><span class="n">theClass</span><span class="p">,</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">resume</span><span class="p">),</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">af_resume</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">af_addMethod</span><span class="p">(</span><span class="n">theClass</span><span class="p">,</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">af_suspend</span><span class="p">),</span> <span class="n">afSuspendMethod</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">af_swizzleSelector</span><span class="p">(</span><span class="n">theClass</span><span class="p">,</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">suspend</span><span class="p">),</span> <span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">af_suspend</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">af_resume</span> <span class="p">{</span>
+    <span class="n">NSAssert</span><span class="p">([</span><span class="n">self</span> <span class="n">respondsToSelector</span><span class="o">:</span><span class="err">@</span><span class="n">selector</span><span class="p">(</span><span class="n">state</span><span class="p">)],</span> <span class="err">@</span><span class="s">"Does not respond to state"</span><span class="p">);</span>
+    <span class="n">NSURLSessionTaskState</span> <span class="n">state</span> <span class="o">=</span> <span class="p">[</span><span class="n">self</span> <span class="n">state</span><span class="p">];</span>
+    <span class="c1">//这一步非常的关键，这里调用[self af_resume]，其实执行的是执行的 之前被交换的resume的实现
+</span>    <span class="p">[</span><span class="n">self</span> <span class="n">af_resume</span><span class="p">];</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="n">state</span> <span class="o">!=</span> <span class="n">NSURLSessionTaskStateRunning</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">[[</span><span class="n">NSNotificationCenter</span> <span class="n">defaultCenter</span><span class="p">]</span> <span class="n">postNotificationName</span><span class="o">:</span><span class="n">AFNSURLSessionTaskDidResumeNotification</span> <span class="n">object</span><span class="o">:</span><span class="n">self</span><span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre>
+</div>
+
+<h3 id="总结">总结</h3>
+<p>AFNetworking 里是，像原有的类新加入了一个方法，然后和需要被交换的方法，交换实现。</p>
+<ol>
+  <li>通过class_addMethod ，像原有类加入新的实例方法</li>
+  <li>通过method_exchangeImplementations 交换方法</li>
+  <li>若仍然需要原有被交换的方法的实现，只需要在新方法中，调用自己即可，因为自己已经和原有的方法实现进行了交换（= = 有点绕 自己看的懂就好）</li>
+</ol>
+
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">LiMengtian&#39;s Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              LiMengtian&#39;s Blog
+            
+            </li>
+            
+            <li><a href="mailto:mengtian.li@hotmail.com">mengtian.li@hotmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/mengtian-li"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">mengtian-li</span></a>
+
+          </li>
+          
+
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>iOS开发学习中，记录自己学习点滴
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
